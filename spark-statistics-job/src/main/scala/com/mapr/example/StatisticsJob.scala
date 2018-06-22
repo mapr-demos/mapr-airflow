@@ -1,16 +1,30 @@
 package com.mapr.example
 
-import org.apache.spark.sql.SparkSession
 import com.mapr.db.spark.sql._
+import org.apache.spark.sql.SparkSession
 
 object StatisticsJob {
 
   def main(args: Array[String]) {
 
-    val spark = SparkSession.builder().appName("StatisticsJob").getOrCreate()
+    if (args.length < 2) {
+      throw new RuntimeException(s"Usage: ${StatisticsJob.getClass.getName} <result-directory-mfs-path> <commit-sha>")
+    }
 
-    val languages = spark.loadFromMapRDB("/apps/languages")
-    languages.show()
+    val resultDirectoryPath = args(0)
+    val commitSha = args(1)
+    val spark = SparkSession.builder().appName("StatisticsJob").getOrCreate()
+    import spark.implicits._
+
+    val topAreasDF = spark.loadFromMapRDB("/apps/artists")
+      .select("area").as[String].rdd
+      .map(area => (area, 1))
+      .reduceByKey(_ + _)
+      .sortBy(_._2, ascending = false)
+      .toDF()
+      .limit(10)
+
+    topAreasDF.rdd.saveAsTextFile(s"$resultDirectoryPath/$commitSha")
   }
 
 }
