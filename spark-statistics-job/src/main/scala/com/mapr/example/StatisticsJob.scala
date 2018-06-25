@@ -1,7 +1,7 @@
 package com.mapr.example
 
 import com.mapr.db.spark.sql._
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 object StatisticsJob {
 
@@ -24,7 +24,10 @@ object StatisticsJob {
       .toDF()
       .limit(10)
 
-    topAreasDF.rdd.saveAsTextFile(s"$resultDirectoryPath/$commitSha")
+    topAreasDF.write
+      .format("csv")
+      .mode(SaveMode.Overwrite)
+      .save(s"$resultDirectoryPath/$commitSha")
   }
 
 }
