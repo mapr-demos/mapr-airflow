@@ -72,6 +72,15 @@ Stores hash of the latest processed commit and path to statistics file to Hive `
 This task executed in the case when the latest mapr-music commit was not changed. It is dummy task, that does literally 
 nothing.
 
+* drill_artist_albums_task
+
+Invokes [script](bin/drill-script.sh) which executes Drill query and stores result as parquet file in MapR-FS.
+
+* spark_top_artists_task
+
+Submits simple Spark job, which computes top 3 artists by albums number and stores results as `csv` file to MapR-FS.
+
+
 Now, `mapr_tasks_dag` is ready and will be run each day, as defined via `schedule_interval` parameter. Also, we can trigger DAG execution for certain period using Airflow CLI:
 
 ## Airflow Connection
@@ -189,7 +198,14 @@ exists and contains valid results:
 Found 1 items
 drwxr-xr-x   - mapr mapr          2 2018-06-25 14:11 /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596
 
-[mapr@yournode ~]$ hadoop fs -cat /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596/part-00000-443a028b-aeab-4192-9539-01a6c7bf58fb.csv
+
+[mapr@yournode ~]$ hadoop fs -ls /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596
+Found 2 items
+drwxr-xr-x   - mapr mapr          2 2018-06-27 16:07 /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596/areas-by-artists
+drwxr-xr-x   - mapr mapr          2 2018-06-27 16:07 /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596/artists-by-albums
+
+
+[mapr@yournode ~]$ hadoop fs -cat /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596/areas-by-artists/part-00000-afe4c306-5f81-4b01-8d45-faea0c169504.csv
 United States,2043
 Germany,1297
 \N,901
@@ -200,6 +216,11 @@ South Korea,389
 France,296
 Italy,220
 Japan,211
+
+[mapr@yournode ~]$ hadoop fs -cat /apps/mapr-airflow/32a2e66b6874d6ad01d8defc485595b70b4ef596/artists-by-albums/part-00000-d88ce130-ca6a-4da5-a103-c3f5e194af68.csv
+f795c501-1c41-4be2-bc2a-875eba75aa31,Gentle Giant,113
+c14b4180-dc87-481e-b17a-64e4150f90f6,Opeth,73
+b23e8a63-8f47-4882-b55b-df2c92ef400e,Interpol,65
 
 ```
 

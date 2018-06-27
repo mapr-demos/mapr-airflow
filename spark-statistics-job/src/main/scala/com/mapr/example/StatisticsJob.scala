@@ -27,7 +27,7 @@ object StatisticsJob {
     topAreasDF.write
       .format("csv")
       .mode(SaveMode.Overwrite)
-      .save(s"$resultDirectoryPath/$commitSha")
+      .save(s"$resultDirectoryPath/$commitSha/areas-by-artists")
   }
 
 }

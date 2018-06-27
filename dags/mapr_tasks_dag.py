@@ -4,6 +4,7 @@ Sample DAG, which declares MapR Spark, Spark SQL and Hive tasks.
 """
 import airflow
 import json
+import os
 from airflow import DAG
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
 from airflow.hooks.hive_hooks import HiveCliHook
@@ -13,7 +14,6 @@ from airflow.operators.hive_operator import HiveOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from datetime import timedelta
-import os
 
 default_args = {
   'owner': 'airflow',
@@ -87,9 +87,29 @@ insert_reimport_record = HiveOperator(
 
 skip_reimport_dataset_task = DummyOperator(task_id='skip_reimport_dataset_task',
                                            dag=dag)
+
 finish_task = DummyOperator(task_id='skip_reimport_dataset_task', dag=dag)
 
-get_last_commit_task >> check_last_commit_task >> reimport_dataset_task >> spark_compute_statistics_task >> insert_reimport_record
+drill_artist_albums_task = BashOperator(
+    task_id='drill_artist_albums_task',
+    bash_command=os.environ[
+                   'MAPR_DAG_DRILL_SCRIPT_PATH'] + " table{{ task_instance.xcom_pull(key='sha', task_ids='check_last_commit_task') }}",
+    dag=dag)
+
+spark_top_artists_task = SparkSubmitOperator(
+    task_id='spark_top_artists_task',
+    application=os.environ['MAPR_DAG_SPARK_JOB_PATH'],
+    java_class='com.mapr.example.TopArtistsJob',
+    application_args=[
+      "/tmp/table{{ task_instance.xcom_pull(key='sha', task_ids='check_last_commit_task') }}",
+      "/apps/mapr-airflow",
+      "{{ task_instance.xcom_pull(key='sha', task_ids='check_last_commit_task') }}"],
+    dag=dag)
+
+get_last_commit_task >> check_last_commit_task >> reimport_dataset_task >> \
+drill_artist_albums_task >> spark_top_artists_task >> \
+spark_compute_statistics_task >> insert_reimport_record
+
 check_last_commit_task >> skip_reimport_dataset_task
 
 dag.doc_md = __doc__
