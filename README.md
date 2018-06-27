@@ -114,6 +114,15 @@ $ scp -r mapr-airflow/dags mapr@$MAPR_NODE_HOSTNAME:/home/mapr/airflow
 
 ```
 
+* Copy `drill-script.sh`
+
+```
+
+$ export MAPR_NODE_HOSTNAME=yournode
+
+$ scp -r mapr-airflow/bin mapr@$MAPR_NODE_HOSTNAME:/home/mapr/airflow
+
+```
 
 * Build and copy Spark Statistics Job
 
@@ -144,6 +153,13 @@ On node:
 Specify path of Spark Statistics Job jar via `MAPR_DAG_SPARK_JOB_PATH` environment variable:
 ```
 [mapr@yournode ~]$ export MAPR_DAG_SPARK_JOB_PATH=/home/mapr/spark-statistics-job-1.0.0-SNAPSHOT.jar
+```
+
+* Specify Drill script location
+
+Specify path of Drill script via `MAPR_DAG_DRILL_SCRIPT_PATH` environment variable:
+```
+[mapr@yournode ~]$ export MAPR_DAG_DRILL_SCRIPT_PATH=/home/mapr/airflow/bin/drill-script.sh
 ```
 
 * Create Hive table
