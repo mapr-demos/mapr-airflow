@@ -7,6 +7,7 @@
 * [MapR DAG](#mapr-dag)
 * [Airflow Connection](#airflow-connection)
 * [Run sample DAG](#run-sample-dag)
+* [Airflow Scheduler](#airflow-scheduler)
 
 
 ## Overview
@@ -251,3 +252,26 @@ OK
 Time taken: 0.129 seconds, Fetched: 1 row(s)
 
 ```
+
+## Airflow Scheduler
+
+The Airflow scheduler is designed to run as a persistent service in an Airflow production environment. To kick it off, 
+all you need to do is execute `airflow scheduler`. It will use the configuration specified in `airflow.cfg`.
+
+MapR DAG is designed to be run every day. To enable scheduling run the following commands:
+```
+[mapr@yournode ~]$ export SPARK_VERSION=2.2.1 
+
+[mapr@yournode ~]$ export PATH=$PATH:/opt/mapr/spark/spark-$SPARK_VERSION/bin
+
+[mapr@yournode ~]$ export MAPR_DAG_SPARK_JOB_PATH=/home/mapr/spark-statistics-job-1.0.0-SNAPSHOT.jar
+
+[mapr@yournode ~]$ export MAPR_DAG_DRILL_SCRIPT_PATH=/home/mapr/airflow/bin/drill-script.sh
+
+[mapr@yournode ~]$ airflow scheduler
+
+```
+
+After that, turn on `mapr_tasks_dag` via Web UI at: http://yournode:8080/admin/
+
+Note, that you can manually trigger DAG execution using `Trigger Dag` button.
