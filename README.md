@@ -26,15 +26,15 @@ Install Airflow  on one of the MapR Cluster nodes:
 [mapr@yournode ~]$ sudo pip install apache-airflow[hive]
 ```
 
+Init Airflow DB using CLI:
+```
+[mapr@yournode ~]$ airflow initdb
+```
+
 Airflow directory will be created in `/home/mapr`:
 ```
 [mapr@yournode ~]$ ls /home/mapr/airflow/
 airflow.cfg  airflow.db  airflow-webserver.pid  logs  unittests.cfg
-```
-
-Init Airflow DB using CLI:
-```
-[mapr@yournode ~]$ airflow initdb
 ```
 
 ## MapR DAG
