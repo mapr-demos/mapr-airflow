@@ -8,6 +8,7 @@
 * [Airflow Connection](#airflow-connection)
 * [Run sample DAG](#run-sample-dag)
 * [Airflow Scheduler](#airflow-scheduler)
+* [Dockerizing](#dockerizing)
 
 
 ## Overview
@@ -275,3 +276,79 @@ MapR DAG is designed to be run every day. To enable scheduling run the following
 After that, turn on `mapr_tasks_dag` via Web UI at: http://yournode:8080/admin/
 
 Note, that you can manually trigger DAG execution using `Trigger Dag` button.
+
+
+## Dockerizing
+
+You can easily deploy and test Airflow MapR DAG by using Docker. MapR Airflow image based on 
+[MapR Persistent Application Client Container image](https://docstage.mapr.com/60/AdvancedInstallation/UsingtheMapRPACC.html), 
+which is a Docker-based container image that includes a container-optimized MapR client. The PACC provides seamless 
+access to MapR Converged Data Platform services, including MapR-FS, MapR-DB, and MapR-ES. The PACC makes it fast and 
+easy to run containerized applications that access data in MapR.
+
+### Prerequisites
+
+You still need properly configured and running MapR Cluster with Hive and Drill installed. Docker image packages 
+preconfigured Airflow with sample MapR DAGs and allows you to easily deploy and test them.
+
+### Building MapR Airflow Docker image 
+
+In order to build MapR Airflow Docker image execute the following commands:
+```
+$ cd spark-statistics-job/
+$ mvn clean install
+$ cd ..
+$ docker build . -t mapr-airflow
+```
+
+### Running container
+
+In order to create and run container from existing `mapr-airlow` image use the following command:
+```
+docker run -it \
+-e MAPR_CONTAINER_USER=mapr \
+-e MAPR_CONTAINER_GROUP=mapr \
+-e MAPR_CONTAINER_UID=5000 \
+-e MAPR_CONTAINER_GID=5000 \
+-e MAPR_CLDB_HOSTS=cldb.node.com \
+-e MAPR_CLUSTER='my.cluster.com' \
+-e WEB_UI_PORT=8081 \
+-e DRILL_NODE=drill.node.com \
+-e DRILL_CLUSTER_ID=my.cluster.com-drillbits \
+-e MAPR_USER_PASSWORD=mapr \
+--net=host  mapr-airflow
+```
+
+Where:
+* `MAPR_CONTAINER_USER`
+The user that the user application inside the Docker container will run as. This configuration is functionally 
+equivalent to the Docker native `-u` or `--user`. Do not use Docker `-u` or `--user`, as the container needs to start as 
+the root user to bring up FUSE before switching to the `MAPR_CONTAINER_USER`.
+
+* `MAPR_CONTAINER_GROUP`
+The group that the application inside the Docker container will run as. This is a companion to the 
+`MAPR_CONTAINER_USER` option. If a group name is not provided, the default is users. Providing a group name is strongly 
+recommended.
+
+* `MAPR_CONTAINER_UID`
+The UID that the application inside the Docker container will run as. This is a companion to the MAPR_CONTAINER_USER 
+option. If a UID is not provided, the default is UID 1000. Providing a UID is strongly recommended.
+
+* `MAPR_CONTAINER_GID`
+The GID that the application inside the Docker container will run as. This is a companion to the MAPR_CONTAINER_USER 
+option. If a GID is not provided, the default is GID 1000. Providing a GID is strongly recommended.
+
+* `MAPR_CLDB_HOSTS`
+The list of CLDB hosts of your MapR cluster.
+
+* `MAPR_CLUSTER`
+The name of the cluster.
+
+* `DRILL_NODE`
+Drill node hostname.
+
+* `DRILL_CLUSTER_ID`
+Drill cluster ID, which can be found at `/opt/mapr/drill/drill-*/conf/drill-override.conf`.
+
+* `MAPR_USER_PASSWORD`
+Password for `MAPR_CONTAINER_USER`. Will be used for Hive and Drill connections.
